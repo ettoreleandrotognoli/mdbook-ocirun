@@ -49,7 +49,7 @@ macro_rules! add_dir {
                     OUTPUT_FILE, working_dir
                 ));
 
-                let actual_output_content = OciRun::run_on_content(&input_content, &working_dir)
+                let actual_output_content = OciRun::default().run_on_content(&input_content, &working_dir)
                     .expect("unable to execute ocirun");
 
                 assert_eq!(output_content, actual_output_content);

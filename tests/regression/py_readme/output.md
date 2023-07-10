@@ -27,10 +27,13 @@ pub fn main() {
 ```
 
 ```diff
-2c2
-<     println!("I'm from `a.rs`");
----
->     println!("I'm from `b.rs`");
+--- a.rs
++++ b.rs
+@@ -1,3 +1,3 @@
+ fn main() {
+-    println!("I'm from `a.rs`");
++    println!("I'm from `b.rs`");
+ }
 ```
 
 ```console

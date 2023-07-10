@@ -11,7 +11,7 @@
 ```
 
 ```diff
-<!-- ocirun fedora diff a.rs b.rs -->
+<!-- ocirun alpine diff a.rs b.rs -->
 ```
 
 ```console

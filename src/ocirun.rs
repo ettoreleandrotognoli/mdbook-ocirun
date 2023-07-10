@@ -19,7 +19,23 @@ use mdbook::preprocess::{Preprocessor, PreprocessorContext};
 
 use crate::utils::map_chapter;
 
-pub struct OciRun;
+pub struct OciRun {
+    engine: String,
+}
+
+impl OciRun {
+    pub fn new(engine: String) -> Self {
+        Self { engine: engine }
+    }
+}
+
+impl Default for OciRun {
+    fn default() -> Self {
+        Self {
+            engine: "podman".to_string(),
+        }
+    }
+}
 
 lazy_static! {
     static ref CMDRUN_REG_NEWLINE: Regex = Regex::new(r"<!--[ ]*ocirun (.*?)-->\r?\n")
@@ -47,9 +63,16 @@ impl Preprocessor for OciRun {
         renderer == "html"
     }
 
-    fn run(&self, _ctx: &PreprocessorContext, mut book: Book) -> Result<Book> {
-        map_chapter(&mut book, &mut OciRun::run_on_chapter)?;
-
+    fn run(&self, context: &PreprocessorContext, mut book: Book) -> Result<Book> {
+        if let Some(config) = context.config.get_preprocessor(self.name()) {
+            let engine = config
+                .get("engine")
+                .map(|it| it.type_str())
+                .or(Some("podman"))
+                .unwrap();
+            let mut preprocessor = OciRun::new(engine.to_string());
+            map_chapter(&mut book, &mut move | chapter | preprocessor.run_on_chapter(chapter) )?;
+        }
         Ok(book)
     }
 }
@@ -77,7 +100,7 @@ fn get_src_dir() -> String {
 }
 
 impl OciRun {
-    fn run_on_chapter(chapter: &mut Chapter) -> Result<()> {
+    fn run_on_chapter(&self, chapter: &mut Chapter) -> Result<()> {
         let working_dir = &chapter
             .path
             .to_owned()
@@ -90,18 +113,18 @@ impl OciRun {
             .and_then(|p| p.to_str().map(String::from))
             .unwrap_or_default();
 
-        chapter.content = OciRun::run_on_content(&chapter.content, working_dir)?;
+        chapter.content = self.run_on_content(&chapter.content, working_dir)?;
 
         Ok(())
     }
 
     // This method is public for regression tests
-    pub fn run_on_content(content: &str, working_dir: &str) -> Result<String> {
+    pub fn run_on_content(&self, content: &str, working_dir: &str) -> Result<String> {
         let mut err = None;
 
         let mut result = CMDRUN_REG_NEWLINE
             .replace_all(content, |caps: &Captures| {
-                Self::run_ocirun(caps[1].to_string(), working_dir, false).unwrap_or_else(|e| {
+                self.run_ocirun(caps[1].to_string(), working_dir, false).unwrap_or_else(|e| {
                     err = Some(e);
                     String::new()
                 })
@@ -114,7 +137,7 @@ impl OciRun {
 
         result = CMDRUN_REG_INLINE
             .replace_all(result.as_str(), |caps: &Captures| {
-                Self::run_ocirun(caps[1].to_string(), working_dir, true).unwrap_or_else(|e| {
+                self.run_ocirun(caps[1].to_string(), working_dir, true).unwrap_or_else(|e| {
                     err = Some(e);
                     String::new()
                 })
@@ -159,7 +182,7 @@ impl OciRun {
     }
 
     // This method is public for unit tests
-    pub fn run_ocirun(raw_command: String, working_dir: &str, inline: bool) -> Result<String> {
+    pub fn run_ocirun(&self, raw_command: String, working_dir: &str, inline: bool) -> Result<String> {
         let absolute_working_dir = Path::new(working_dir).canonicalize().unwrap();
         //let output = Command::new(LAUNCH_SHELL_COMMAND)
         //    .args([LAUNCH_SHELL_FLAG, &command])
@@ -171,7 +194,7 @@ impl OciRun {
             .or(Some(("alpine", raw_command.as_str())))
             .unwrap();
         let image = image_and_command.0;
-        let mut command = Command::new("docker");
+        let mut command = Command::new(self.engine.as_str());
         command.stdin(Stdio::null()).args([
             "run",
             "--rm",
