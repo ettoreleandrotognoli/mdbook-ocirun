@@ -1,3 +1,3 @@
 # Bash call
 
-<!-- cmdrun bash script.sh -->
+<!-- ocirun bash script.sh -->

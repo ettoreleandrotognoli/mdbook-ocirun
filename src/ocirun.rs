@@ -18,12 +18,12 @@ use mdbook::preprocess::{Preprocessor, PreprocessorContext};
 
 use crate::utils::map_chapter;
 
-pub struct CmdRun;
+pub struct OciRun;
 
 lazy_static! {
-    static ref CMDRUN_REG_NEWLINE: Regex = Regex::new(r"<!--[ ]*cmdrun (.*?)-->\r?\n")
+    static ref CMDRUN_REG_NEWLINE: Regex = Regex::new(r"<!--[ ]*ocirun (.*?)-->\r?\n")
         .expect("Failed to init regex for finding newline pattern");
-    static ref CMDRUN_REG_INLINE: Regex = Regex::new(r"<!--[ ]*cmdrun (.*?)-->")
+    static ref CMDRUN_REG_INLINE: Regex = Regex::new(r"<!--[ ]*ocirun (.*?)-->")
         .expect("Failed to init regex for finding inline pattern");
 }
 
@@ -37,9 +37,9 @@ cfg_if! {
     }
 }
 
-impl Preprocessor for CmdRun {
+impl Preprocessor for OciRun {
     fn name(&self) -> &str {
-        "cmdrun"
+        "ocirun"
     }
 
     fn supports_renderer(&self, renderer: &str) -> bool {
@@ -47,7 +47,7 @@ impl Preprocessor for CmdRun {
     }
 
     fn run(&self, _ctx: &PreprocessorContext, mut book: Book) -> Result<Book> {
-        map_chapter(&mut book, &mut CmdRun::run_on_chapter)?;
+        map_chapter(&mut book, &mut OciRun::run_on_chapter)?;
 
         Ok(book)
     }
@@ -75,7 +75,7 @@ fn get_src_dir() -> String {
         .unwrap_or_else(|_| String::from("src"))
 }
 
-impl CmdRun {
+impl OciRun {
     fn run_on_chapter(chapter: &mut Chapter) -> Result<()> {
         let working_dir = &chapter
             .path
@@ -89,7 +89,7 @@ impl CmdRun {
             .and_then(|p| p.to_str().map(String::from))
             .unwrap_or_default();
 
-        chapter.content = CmdRun::run_on_content(&chapter.content, working_dir)?;
+        chapter.content = OciRun::run_on_content(&chapter.content, working_dir)?;
 
         Ok(())
     }
@@ -100,7 +100,7 @@ impl CmdRun {
 
         let mut result = CMDRUN_REG_NEWLINE
             .replace_all(content, |caps: &Captures| {
-                Self::run_cmdrun(caps[1].to_string(), working_dir, false).unwrap_or_else(|e| {
+                Self::run_ocirun(caps[1].to_string(), working_dir, false).unwrap_or_else(|e| {
                     err = Some(e);
                     String::new()
                 })
@@ -113,7 +113,7 @@ impl CmdRun {
 
         result = CMDRUN_REG_INLINE
             .replace_all(result.as_str(), |caps: &Captures| {
-                Self::run_cmdrun(caps[1].to_string(), working_dir, true).unwrap_or_else(|e| {
+                Self::run_ocirun(caps[1].to_string(), working_dir, true).unwrap_or_else(|e| {
                     err = Some(e);
                     String::new()
                 })
@@ -158,7 +158,7 @@ impl CmdRun {
     }
 
     // This method is public for unit tests
-    pub fn run_cmdrun(command: String, working_dir: &str, inline: bool) -> Result<String> {
+    pub fn run_ocirun(command: String, working_dir: &str, inline: bool) -> Result<String> {
         let output = Command::new(LAUNCH_SHELL_COMMAND)
             .args([LAUNCH_SHELL_FLAG, &command])
             .current_dir(working_dir)

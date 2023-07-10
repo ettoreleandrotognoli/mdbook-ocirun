@@ -6,7 +6,7 @@ use mdbook::preprocess::Preprocessor;
 use std::io;
 use std::process;
 
-use mdbook_cmdrun::CmdRun;
+use mdbook_ocirun::OciRun;
 
 fn main() {
     let matches = make_app().get_matches();
@@ -20,7 +20,7 @@ fn main() {
 }
 
 fn make_app() -> Command {
-    Command::new("mdbook-cmdrun")
+    Command::new("mdbook-ocirun")
         .about("mdbook preprocessor to run arbitrary commands and replace the stdout of these commands inside the markdown file.")
         .subcommand(
             Command::new("supports")
@@ -34,14 +34,14 @@ fn handle_preprocessing() -> Result<(), Error> {
 
     if ctx.mdbook_version != mdbook::MDBOOK_VERSION {
         eprintln!(
-            "Warning: The mdbook-cmdrun preprocessor was built against version \
+            "Warning: The mdbook-ocirun preprocessor was built against version \
              {} of mdbook, but we're being called from version {}",
             mdbook::MDBOOK_VERSION,
             ctx.mdbook_version
         );
     }
 
-    let processed_book = CmdRun.run(&ctx, book)?;
+    let processed_book = OciRun.run(&ctx, book)?;
     serde_json::to_writer(io::stdout(), &processed_book)?;
 
     Ok(())
@@ -51,7 +51,7 @@ fn handle_supports(sub_args: &ArgMatches) -> ! {
     let renderer = sub_args
         .get_one::<String>("renderer")
         .expect("Required argument");
-    let supported = CmdRun.supports_renderer(renderer);
+    let supported = OciRun.supports_renderer(renderer);
 
     // Signal whether the renderer is supported by exiting with 1 or 0.
     if supported {

@@ -1,3 +1,3 @@
 # Bash call
 
-<!-- cmdrun call script.bat -->
+<!-- ocirun call script.bat -->

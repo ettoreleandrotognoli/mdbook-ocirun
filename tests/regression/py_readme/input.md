@@ -1,19 +1,19 @@
 # Title
 
-<!-- cmdrun seq 1 10 -->
+<!-- ocirun seq 1 10 -->
 
-<!-- cmdrun python3 script.py -->
+<!-- ocirun python3 script.py -->
 
-<!-- cmdrun python3 generate_table.py -->
+<!-- ocirun python3 generate_table.py -->
 
 ```rust
-<!-- cmdrun cat program.rs -->
+<!-- ocirun cat program.rs -->
 ```
 
 ```diff
-<!-- cmdrun diff a.rs b.rs -->
+<!-- ocirun diff a.rs b.rs -->
 ```
 
 ```console
-<!-- cmdrun ls -1 -S . -->
+<!-- ocirun ls -1 -S . -->
 ```

@@ -17,7 +17,7 @@ macro_rules! add_dir {
         mod $working_dir {
             use super::*;
 
-            use mdbook_cmdrun::CmdRun;
+            use mdbook_ocirun::OciRun;
 
             #[test]
             fn regression() {
@@ -49,8 +49,8 @@ macro_rules! add_dir {
                     OUTPUT_FILE, working_dir
                 ));
 
-                let actual_output_content = CmdRun::run_on_content(&input_content, &working_dir)
-                    .expect("unable to execute cmdrun");
+                let actual_output_content = OciRun::run_on_content(&input_content, &working_dir)
+                    .expect("unable to execute ocirun");
 
                 assert_eq!(output_content, actual_output_content);
             }

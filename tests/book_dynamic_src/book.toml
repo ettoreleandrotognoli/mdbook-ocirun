@@ -2,7 +2,7 @@
 authors = ["Fauconfan"]
 language = "en"
 src = "src_parent/src"
-title = "CmdRun Test Book"
+title = "OciRun Test Book"
 
-[preprocessor.cmdrun]
-command = "../../target/debug/mdbook-cmdrun"
+[preprocessor.ocirun]
+command = "../../target/debug/mdbook-ocirun"

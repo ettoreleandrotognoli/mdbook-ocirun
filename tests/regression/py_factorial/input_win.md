@@ -1,3 +1,3 @@
 # Factorial Report
 
-<!-- cmdrun python3 factorial.py 15 -->
+<!-- ocirun python3 factorial.py 15 -->

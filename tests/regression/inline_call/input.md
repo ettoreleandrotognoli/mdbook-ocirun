@@ -2,5 +2,5 @@
 
 Item | Price | # In stock
 ---|---|---
-Juicy Apples | <!-- cmdrun node price.mjs apples --> | *<!-- cmdrun node quantity.mjs apples  -->*
-Bananas | *<!-- cmdrun node price.mjs bananas -->* | <!-- cmdrun node quantity.mjs bananas --> |
+Juicy Apples | <!-- ocirun node price.mjs apples --> | *<!-- ocirun node quantity.mjs apples  -->*
+Bananas | *<!-- ocirun node price.mjs bananas -->* | <!-- ocirun node quantity.mjs bananas --> |

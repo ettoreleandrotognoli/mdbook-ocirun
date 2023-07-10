@@ -1,11 +1,11 @@
 use cfg_if::cfg_if;
-use mdbook_cmdrun::CmdRun;
+use mdbook_ocirun::OciRun;
 
 macro_rules! add_test {
     ($name:ident, $cmd:literal, $output:literal, $val:expr $(,)?) => {
         #[test]
         fn $name() {
-            let actual_output = CmdRun::run_cmdrun($cmd.to_string(), ".", $val).unwrap();
+            let actual_output = OciRun::run_ocirun($cmd.to_string(), ".", $val).unwrap();
 
             assert_eq!(actual_output, $output);
         }
