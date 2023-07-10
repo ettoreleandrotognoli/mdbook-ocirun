@@ -67,7 +67,7 @@ impl Preprocessor for OciRun {
         if let Some(config) = context.config.get_preprocessor(self.name()) {
             let engine = config
                 .get("engine")
-                .map(|it| it.type_str())
+                .and_then(|it| it.as_str())
                 .or(Some("podman"))
                 .unwrap();
             let mut preprocessor = OciRun::new(engine.to_string());
