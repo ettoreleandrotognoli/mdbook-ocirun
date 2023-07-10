@@ -1,3 +1,3 @@
 # Bash call
 
-<!-- ocirun bash script.sh -->
+<!-- ocirun fedora bash script.sh -->

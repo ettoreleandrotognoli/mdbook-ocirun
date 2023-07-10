@@ -166,7 +166,11 @@ impl OciRun {
         //    .current_dir(working_dir)
         //    .output()
         //    .with_context(|| "Fail to run shell")?;
-        let image = "fedora";
+        let image_and_command = raw_command
+            .split_once(" ")
+            .or(Some(("alpine", raw_command.as_str())))
+            .unwrap();
+        let image = image_and_command.0;
         let mut command = Command::new("docker");
         command.stdin(Stdio::null()).args([
             "run",
@@ -179,7 +183,7 @@ impl OciRun {
             image,
             LAUNCH_SHELL_COMMAND,
             LAUNCH_SHELL_FLAG,
-            &raw_command,
+            &image_and_command.1,
         ]);
         eprintln!(">>>>>>>>> {:?}", &command);
 
@@ -187,7 +191,8 @@ impl OciRun {
 
         eprintln!(">>>>>>>>> {:?}", &output);
 
-        let stdout = Self::format_whitespace(String::from_utf8_lossy(&output.stdout), inline);
+        let stdout = Self::format_whitespace(String::from_utf8_lossy(&output.stdout), inline)
+            .replace("\r\n", "\n");
 
         // let stderr = String::from_utf8_lossy(&output.stderr).to_string();
 

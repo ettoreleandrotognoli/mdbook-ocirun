@@ -24,9 +24,9 @@ Markdown file: file.md
 ```markdown
 # Title
 
-<!-- ocirun seq 1 10 -->
+<!-- ocirun alpine seq 1 10 -->
 
-<!-- ocirun python3 script.py -->
+<!-- ocirun python python script.py -->
 
 ```
 
@@ -69,7 +69,7 @@ The preprocessor will call seq then python3, and will produce the resulting file
 
 ## Details
 
-When the pattern `<!-- ocirun $1 -->\n` or `<!-- ocirun $1 -->` is encountered, the command `$1` will be run using the shell `sh` like this: `sh -c $1`.
+When the pattern `<!-- ocirun <image> $1 -->\n` or `<!-- ocirun $1 -->` is encountered, the command `$1` will be run using the shell `sh` like this: `sh -c $1`.
 Also the working directory is the directory where the pattern was found (not root).
 The command invoked must take no inputs (stdin is not used), but a list of command lines arguments and must produce output in stdout, stderr is ignored.
 
@@ -81,26 +81,26 @@ The following is valid:
 
 ````markdown
 
-<!-- ocirun python3 generate_table.py -->
+<!-- ocirun python python3 generate_table.py -->
 
 ```rust
-<!-- ocirun cat program.rs -->
+<!-- ocirun alpine cat program.rs -->
 ```
 
 ```diff
-<!-- ocirun diff a.rs b.rs -->
+<!-- ocirun alpine diff a.rs b.rs -->
 ```
 
 ```console
-<!-- ocirun ls -l . -->
+<!-- ocirun alpine ls -l . -->
 ```
 
 ## Example of inline use inside a table
 ````markdown
 Item | Price | # In stock
 ---|---|---
-Juicy Apples | <!-- ocirun node price.mjs apples --> | *<!-- ocirun node quantity.mjs apples  -->*
-Bananas | *<!-- ocirun node price.mjs bananas -->* | <!-- ocirun node quantity.mjs bananas -->
+Juicy Apples | <!-- ocirun node node price.mjs apples --> | *<!-- ocirun node node quantity.mjs apples  -->*
+Bananas | *<!-- ocirun node node price.mjs bananas -->* | <!-- ocirun node node quantity.mjs bananas -->
 ````
 
 Which gets rendered as:

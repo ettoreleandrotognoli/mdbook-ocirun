@@ -1,3 +1,3 @@
 # Rust call
 
-<!-- ocirun rustc script.rs && call script.exe && del script.exe && del script.pdb -->
+<!-- ocirun rust rustc script.rs && call script.exe && del script.exe && del script.pdb -->

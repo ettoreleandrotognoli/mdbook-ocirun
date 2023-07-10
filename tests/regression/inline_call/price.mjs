@@ -3,4 +3,4 @@ const prices = {
   bananas: 1.89
 }
 
-console.log(prices[process.argv[2]] ?? prices[apples])
+console.log(prices[process.argv[2]] ?? prices.apples)

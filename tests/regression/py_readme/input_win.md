@@ -1,19 +1,19 @@
 # Title
 
-<!-- ocirun seq 1 10 -->
+<!-- ocirun alpine seq 1 10 -->
 
-<!-- ocirun python3 script.py -->
+<!-- ocirun python python script.py -->
 
-<!-- ocirun python3 generate_table.py -->
+<!-- ocirun python python generate_table.py -->
 
 ```rust
-<!-- ocirun cat program.rs -->
+<!-- ocirun alpine cat program.rs -->
 ```
 
 ```diff
-<!-- ocirun diff a.rs b.rs -->
+<!-- ocirun alpine diff a.rs b.rs -->
 ```
 
 ```console
-<!-- ocirun ls -1 -S . -->
+<!-- ocirun alpine ls -1 -S . -->
 ```

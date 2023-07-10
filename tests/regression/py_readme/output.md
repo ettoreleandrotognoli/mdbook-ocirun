@@ -21,6 +21,9 @@
 | Value 'a' | Value 'b' |
 
 ```rust
+pub fn main() {
+    println!("Hello, World!!!");
+}
 ```
 
 ```diff
@@ -37,6 +40,7 @@ input.md
 input_win.md
 script.py
 generate_table.py
+program.rs
 a.rs
 b.rs
 ```

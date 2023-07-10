@@ -1,3 +1,3 @@
 # Rust call
 
-<!-- ocirun rustc script.rs; ./script; rm script -->
+<!-- ocirun rust rustc script.rs; ./script; rm script -->
