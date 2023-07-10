@@ -3,6 +3,7 @@ use std::fs;
 use std::path::Path;
 use std::path::PathBuf;
 use std::process::Command;
+use std::process::Stdio;
 
 use anyhow::Context;
 use anyhow::Result;
@@ -158,12 +159,33 @@ impl OciRun {
     }
 
     // This method is public for unit tests
-    pub fn run_ocirun(command: String, working_dir: &str, inline: bool) -> Result<String> {
-        let output = Command::new(LAUNCH_SHELL_COMMAND)
-            .args([LAUNCH_SHELL_FLAG, &command])
-            .current_dir(working_dir)
-            .output()
-            .with_context(|| "Fail to run shell")?;
+    pub fn run_ocirun(raw_command: String, working_dir: &str, inline: bool) -> Result<String> {
+        let absolute_working_dir = Path::new(working_dir).canonicalize().unwrap();
+        //let output = Command::new(LAUNCH_SHELL_COMMAND)
+        //    .args([LAUNCH_SHELL_FLAG, &command])
+        //    .current_dir(working_dir)
+        //    .output()
+        //    .with_context(|| "Fail to run shell")?;
+        let image = "fedora";
+        let mut command = Command::new("docker");
+        command.stdin(Stdio::null()).args([
+            "run",
+            "--rm",
+            "-w",
+            absolute_working_dir.to_str().unwrap(),
+            "-v",
+            format!("{0:}:{0:}", absolute_working_dir.to_str().unwrap()).as_str(),
+            "-t",
+            image,
+            LAUNCH_SHELL_COMMAND,
+            LAUNCH_SHELL_FLAG,
+            &raw_command,
+        ]);
+        eprintln!(">>>>>>>>> {:?}", &command);
+
+        let output = command.output().with_context(|| "Fail to run shell")?;
+
+        eprintln!(">>>>>>>>> {:?}", &output);
 
         let stdout = Self::format_whitespace(String::from_utf8_lossy(&output.stdout), inline);
 
