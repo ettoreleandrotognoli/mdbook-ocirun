@@ -5,7 +5,9 @@ macro_rules! add_test {
     ($name:ident, $cmd:literal, $output:literal, $val:expr $(,)?) => {
         #[test]
         fn $name() {
-            let actual_output = OciRun::default().run_ocirun($cmd.to_string(), ".", $val).unwrap();
+            let actual_output = OciRun::default()
+                .run_ocirun($cmd.to_string(), ".", $val)
+                .unwrap();
 
             assert_eq!(actual_output, $output);
         }

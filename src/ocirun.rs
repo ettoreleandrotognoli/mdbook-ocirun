@@ -71,7 +71,9 @@ impl Preprocessor for OciRun {
                 .or(Some("podman"))
                 .unwrap();
             let mut preprocessor = OciRun::new(engine.to_string());
-            map_chapter(&mut book, &mut move | chapter | preprocessor.run_on_chapter(chapter) )?;
+            map_chapter(&mut book, &mut move |chapter| {
+                preprocessor.run_on_chapter(chapter)
+            })?;
         }
         Ok(book)
     }
@@ -124,10 +126,11 @@ impl OciRun {
 
         let mut result = CMDRUN_REG_NEWLINE
             .replace_all(content, |caps: &Captures| {
-                self.run_ocirun(caps[1].to_string(), working_dir, false).unwrap_or_else(|e| {
-                    err = Some(e);
-                    String::new()
-                })
+                self.run_ocirun(caps[1].to_string(), working_dir, false)
+                    .unwrap_or_else(|e| {
+                        err = Some(e);
+                        String::new()
+                    })
             })
             .to_string();
 
@@ -137,10 +140,11 @@ impl OciRun {
 
         result = CMDRUN_REG_INLINE
             .replace_all(result.as_str(), |caps: &Captures| {
-                self.run_ocirun(caps[1].to_string(), working_dir, true).unwrap_or_else(|e| {
-                    err = Some(e);
-                    String::new()
-                })
+                self.run_ocirun(caps[1].to_string(), working_dir, true)
+                    .unwrap_or_else(|e| {
+                        err = Some(e);
+                        String::new()
+                    })
             })
             .to_string();
 
@@ -182,7 +186,12 @@ impl OciRun {
     }
 
     // This method is public for unit tests
-    pub fn run_ocirun(&self, raw_command: String, working_dir: &str, inline: bool) -> Result<String> {
+    pub fn run_ocirun(
+        &self,
+        raw_command: String,
+        working_dir: &str,
+        inline: bool,
+    ) -> Result<String> {
         let absolute_working_dir = Path::new(working_dir).canonicalize().unwrap();
         //let output = Command::new(LAUNCH_SHELL_COMMAND)
         //    .args([LAUNCH_SHELL_FLAG, &command])
