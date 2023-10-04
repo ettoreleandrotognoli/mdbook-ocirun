@@ -7,7 +7,7 @@
 //! ```
 //!
 //! You also have to activate the preprocessor, put this in your `book.toml` file:
-//! 
+//!
 //! ```toml
 //! [preprocessor.ocirun]
 //! ```
@@ -17,7 +17,7 @@
 //! Let's say we have these two files:
 //!
 //! Markdown file: file.md
-//! 
+//!
 //! ```markdown
 //! # Title
 //!
@@ -28,7 +28,7 @@
 //! ```
 //!
 //! Python file: script.py
-//! 
+//!
 //! ```python
 //! def main():
 //!     print("## Generated subtitle")
@@ -94,7 +94,7 @@
 //! ```
 //!
 //! ## Example of inline use inside a table
-//! 
+//!
 //! ````markdown
 //! Item | Price | # In stock
 //! ---|---|---
@@ -103,7 +103,7 @@
 //! ````
 //!
 //! Which gets rendered as:
-//! 
+//!
 //! ````markdown
 //! Item | Price | # In stock
 //! ---|---|---
@@ -113,14 +113,14 @@
 //!
 //! Some more examples are implemented, and are used as regression tests. You can find them [here](https://github.com/FauconFan/mdbook-ocirun/tree/master/tests/regression/).
 //! At the moment of writing, there are examples using:
-//! 
+//!
 //! - Shell
 //! - Bash script
 //! - Batch script
 //! - Python3
 //! - Node
 //! - Rust
-//! 
+//!
 pub mod ocirun;
 mod utils;
 
