@@ -1,4 +1,4 @@
-[![Workflow Status](https://github.com/FauconFan/mdbook-ocirun/actions/workflows/main.yml/badge.svg)](https://github.com/FauconFan/mdbook-ocirun/actions?query=workflow%3A%22main%22)
+[![Workflow Status](https://github.com/ettoreleandrotognoli/mdbook-ocirun/actions/workflows/main.yml/badge.svg)](https://github.com/ettoreleandrotognoli/mdbook-ocirun/actions?query=workflow%3A%22main%22)
 ![Crates.io](https://img.shields.io/crates/l/mdbook-ocirun)
 
 # mdbook-ocirun
@@ -12,6 +12,7 @@ cargo install mdbook-ocirun
 ```
 
 You also have to activate the preprocessor, put this in your `book.toml` file:
+
 ```toml
 [preprocessor.ocirun]
 ```
@@ -21,6 +22,7 @@ You also have to activate the preprocessor, put this in your `book.toml` file:
 Let's say we have these two files:
 
 Markdown file: file.md
+
 ```markdown
 # Title
 
@@ -31,6 +33,7 @@ Markdown file: file.md
 ```
 
 Python file: script.py
+
 ```python
 def main():
     print("## Generated subtitle")
@@ -81,7 +84,7 @@ The following is valid:
 
 ````markdown
 
-<!-- ocirun python python3 generate_table.py -->
+<!-- ocirun python python generate_table.py -->
 
 ```rust
 <!-- ocirun alpine cat program.rs -->
@@ -96,6 +99,7 @@ The following is valid:
 ```
 
 ## Example of inline use inside a table
+
 ````markdown
 Item | Price | # In stock
 ---|---|---
@@ -104,6 +108,7 @@ Bananas | *<!-- ocirun node node price.mjs bananas -->* | <!-- ocirun node node 
 ````
 
 Which gets rendered as:
+
 ````markdown
 Item | Price | # In stock
 ---|---|---
@@ -113,6 +118,7 @@ Bananas | *1.89* | 5234
 
 Some more examples are implemented, and are used as regression tests. You can find them [here](https://github.com/FauconFan/mdbook-ocirun/tree/master/tests/regression/).
 At the moment of writing, there are examples using:
+
 - Shell
 - Bash script
 - Batch script
@@ -120,10 +126,9 @@ At the moment of writing, there are examples using:
 - Node
 - Rust
 
-
 ## Contributors
 
 I would like to thank [@exsjabe](https://github.com/exsjabe) for his valuable help with integrating Windows support and inline ocirun calls.
 
-Current version: 0.6.0  
+Current version: 0.1.0  
 License: MIT

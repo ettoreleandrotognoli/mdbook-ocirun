@@ -25,7 +25,7 @@ pub struct OciRun {
 
 impl OciRun {
     pub fn new(engine: String) -> Self {
-        Self { engine: engine }
+        Self { engine }
     }
 }
 
@@ -68,8 +68,7 @@ impl Preprocessor for OciRun {
             let engine = config
                 .get("engine")
                 .and_then(|it| it.as_str())
-                .or(Some("podman"))
-                .unwrap();
+                .unwrap_or("podman");
             let mut preprocessor = OciRun::new(engine.to_string());
             map_chapter(&mut book, &mut move |chapter| {
                 preprocessor.run_on_chapter(chapter)
@@ -199,9 +198,8 @@ impl OciRun {
         //    .output()
         //    .with_context(|| "Fail to run shell")?;
         let image_and_command = raw_command
-            .split_once(" ")
-            .or(Some(("alpine", raw_command.as_str())))
-            .unwrap();
+            .split_once(' ')
+            .unwrap_or(("alpine", raw_command.as_str()));
         let image = image_and_command.0;
         let mut command = Command::new(self.engine.as_str());
         command.stdin(Stdio::null()).args([
@@ -215,7 +213,7 @@ impl OciRun {
             image,
             LAUNCH_SHELL_COMMAND,
             LAUNCH_SHELL_FLAG,
-            &image_and_command.1,
+            (image_and_command.1),
         ]);
         eprintln!(">>>>>>>>> {:?}", &command);
 
