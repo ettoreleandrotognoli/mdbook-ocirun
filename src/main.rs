@@ -40,7 +40,8 @@ fn handle_preprocessing() -> Result<(), Error> {
             ctx.mdbook_version
         );
     }
-
+    eprintln!("{ctx:?}");
+    eprintln!("{book:?}");
     let processed_book = OciRun::default().run(&ctx, book)?;
     serde_json::to_writer(io::stdout(), &processed_book)?;
 

@@ -122,6 +122,7 @@
 //! - Rust
 //!
 pub mod ocirun;
+pub mod snippet;
 mod utils;
 
 pub use ocirun::OciRun;
