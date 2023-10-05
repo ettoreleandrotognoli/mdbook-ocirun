@@ -6,3 +6,8 @@ title = "OciRun Test Book"
 
 [preprocessor.ocirun]
 command = "../../target/debug/mdbook-ocirun"
+
+
+[[preprocessor.ocirun.langs]]
+name = "rs"
+image = "rust:alpine"

@@ -1,11 +1,13 @@
 use cfg_if::cfg_if;
-use mdbook_ocirun::OciRun;
+use mdbook_ocirun::OciRunConfig;
+use std::path::Path;
 
 macro_rules! add_test {
     ($name:ident, $cmd:literal, $output:literal, $val:expr $(,)?) => {
         #[test]
         fn $name() {
-            let actual_output = OciRun::default()
+            let actual_output = OciRunConfig::default()
+                .create_preprocessor(Path::new(".").to_path_buf())
                 .run_ocirun($cmd.to_string(), ".", $val)
                 .unwrap();
 

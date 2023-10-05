@@ -1,5 +1,6 @@
 use cfg_if::cfg_if;
 use std::fs;
+use std::path::Path;
 
 cfg_if! {
     if #[cfg(any(target_family = "unix", target_family = "other"))] {
@@ -17,7 +18,7 @@ macro_rules! add_dir {
         mod $working_dir {
             use super::*;
 
-            use mdbook_ocirun::OciRun;
+            use mdbook_ocirun::OciRunConfig;
 
             #[test]
             fn regression() {
@@ -49,7 +50,8 @@ macro_rules! add_dir {
                     OUTPUT_FILE, working_dir
                 ));
 
-                let actual_output_content = OciRun::default()
+                let actual_output_content = OciRunConfig::default()
+                    .create_preprocessor(Path::new(".").to_path_buf())
                     .run_on_content(&input_content, &working_dir)
                     .expect("unable to execute ocirun");
 

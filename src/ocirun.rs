@@ -7,7 +7,6 @@ use std::process::Stdio;
 
 use anyhow::Context;
 use anyhow::Result;
-use cfg_if::cfg_if;
 use lazy_static::lazy_static;
 use regex::Captures;
 use regex::Regex;
@@ -20,48 +19,41 @@ use mdbook::preprocess::{Preprocessor, PreprocessorContext};
 use crate::utils::map_chapter;
 
 #[derive(Debug, Deserialize, Serialize)]
+pub struct LangConfig {
+    name: String,
+    image: String,
+}
+
+#[derive(Debug, Deserialize, Serialize, Default)]
 pub struct OciRunConfig {
     #[serde(default)]
     pub command: Option<String>,
     #[serde(default)]
     pub engine: Option<String>,
-}
-
-impl Default for OciRunConfig {
-    fn default() -> Self {
-        Self {
-            command: None,
-            engine: None,
-        }
-    }
+    #[serde(default)]
+    pub langs: Vec<LangConfig>,
 }
 
 impl OciRunConfig {
-    pub fn create_preprocessor(&self) -> OciRun {
+    pub fn create_preprocessor(&self, root_path: PathBuf) -> OciRun {
         OciRun {
             engine: match &self.engine {
                 Some(engine) => engine.clone(),
-                None => "podman".to_string(),
+                None => "docker".to_string(),
             },
+            root_path,
         }
     }
 }
 
 pub struct OciRun {
-    engine: String,
-}
-
-impl OciRun {
-    pub fn new(engine: String) -> Self {
-        Self { engine }
-    }
+    pub engine: String,
+    pub root_path: PathBuf,
 }
 
 impl Default for OciRun {
     fn default() -> Self {
-        Self {
-            engine: "podman".to_string(),
-        }
+        OciRunConfig::default().create_preprocessor(Path::new(".").to_path_buf())
     }
 }
 
@@ -72,15 +64,8 @@ lazy_static! {
         .expect("Failed to init regex for finding inline pattern");
 }
 
-cfg_if! {
-    if #[cfg(any(target_family = "unix", target_family = "other"))] {
-        const LAUNCH_SHELL_COMMAND: &str = "sh";
-        const LAUNCH_SHELL_FLAG: &str = "-c";
-    } else if #[cfg(target_family = "windows")] {
-        const LAUNCH_SHELL_COMMAND: &str = "cmd";
-        const LAUNCH_SHELL_FLAG: &str = "/C";
-    }
-}
+const LAUNCH_SHELL_COMMAND: &str = "sh";
+const LAUNCH_SHELL_FLAG: &str = "-c";
 
 impl Preprocessor for OciRun {
     fn name(&self) -> &str {
@@ -99,7 +84,7 @@ impl Preprocessor for OciRun {
             .with_context(|| "Could not deserialize [preprocessor.ocirun]")
             .unwrap()
             .unwrap_or(OciRunConfig::default());
-        let preprocessor = config.create_preprocessor();
+        let preprocessor = config.create_preprocessor(context.root.clone());
         map_chapter(&mut book, &mut move |chapter| {
             preprocessor.run_on_chapter(chapter)
         })?;
@@ -205,7 +190,7 @@ impl OciRun {
     }
 
     #[cfg(any(target_family = "unix", target_family = "other"))]
-    fn format_whitespace(str: Cow<'_, str>, inline: bool) -> String {
+    pub fn format_whitespace(str: Cow<'_, str>, inline: bool) -> String {
         match inline {
             // Wh;n running inline it is undeseriable to have trailing whitespace
             true => str.trim_end().to_string(),
@@ -226,10 +211,9 @@ impl OciRun {
         //    .current_dir(working_dir)
         //    .output()
         //    .with_context(|| "Fail to run shell")?;
-        let image_and_command = raw_command
+        let (image, cmd) = raw_command
             .split_once(' ')
             .unwrap_or(("alpine", raw_command.as_str()));
-        let image = image_and_command.0;
         let mut command = Command::new(self.engine.as_str());
         command.stdin(Stdio::null()).args([
             "run",
@@ -242,7 +226,7 @@ impl OciRun {
             image,
             LAUNCH_SHELL_COMMAND,
             LAUNCH_SHELL_FLAG,
-            (image_and_command.1),
+            cmd,
         ]);
         eprintln!(">>>>>>>>> {:?}", &command);
 
