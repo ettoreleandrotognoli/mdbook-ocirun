@@ -6,19 +6,46 @@ use std::process::Command;
 use std::process::Stdio;
 
 use anyhow::Context;
-use anyhow::Ok;
 use anyhow::Result;
 use cfg_if::cfg_if;
 use lazy_static::lazy_static;
 use regex::Captures;
 use regex::Regex;
-use serde::Deserialize;
+use serde::{Deserialize, Serialize};
 
 use mdbook::book::Book;
 use mdbook::book::Chapter;
 use mdbook::preprocess::{Preprocessor, PreprocessorContext};
 
 use crate::utils::map_chapter;
+
+#[derive(Debug, Deserialize, Serialize)]
+pub struct OciRunConfig {
+    #[serde(default)]
+    pub command: Option<String>,
+    #[serde(default)]
+    pub engine: Option<String>,
+}
+
+impl Default for OciRunConfig {
+    fn default() -> Self {
+        Self {
+            command: None,
+            engine: None,
+        }
+    }
+}
+
+impl OciRunConfig {
+    pub fn create_preprocessor(&self) -> OciRun {
+        OciRun {
+            engine: match &self.engine {
+                Some(engine) => engine.clone(),
+                None => "podman".to_string(),
+            },
+        }
+    }
+}
 
 pub struct OciRun {
     engine: String,
@@ -65,16 +92,17 @@ impl Preprocessor for OciRun {
     }
 
     fn run(&self, context: &PreprocessorContext, mut book: Book) -> Result<Book> {
-        if let Some(config) = context.config.get_preprocessor(self.name()) {
-            let engine = config
-                .get("engine")
-                .and_then(|it| it.as_str())
-                .unwrap_or("podman");
-            let mut preprocessor = OciRun::new(engine.to_string());
-            map_chapter(&mut book, &mut move |chapter| {
-                preprocessor.run_on_chapter(chapter)
-            })?;
-        }
+        let key = format!("preprocessor.{}", self.name());
+        let config = context
+            .config
+            .get_deserialized_opt::<OciRunConfig, _>(key)
+            .with_context(|| "Could not deserialize [preprocessor.ocirun]")
+            .unwrap()
+            .unwrap_or(OciRunConfig::default());
+        let preprocessor = config.create_preprocessor();
+        map_chapter(&mut book, &mut move |chapter| {
+            preprocessor.run_on_chapter(chapter)
+        })?;
         Ok(book)
     }
 }
