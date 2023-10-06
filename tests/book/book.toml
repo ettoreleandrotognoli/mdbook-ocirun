@@ -9,5 +9,17 @@ command = "../../target/debug/mdbook-ocirun"
 
 
 [[preprocessor.ocirun.langs]]
-name = "rs"
-image = "rust:alpine"
+name = "rust"
+image = "rust"
+command = ["/bin/bash", "-ec", "rustc source -o binary && ./binary < input"]
+
+[[preprocessor.ocirun.langs]]
+name = "python"
+image = "python"
+command = ["python", "source", "<input"]
+
+
+[[preprocessor.ocirun.langs]]
+name = "ts"
+image = "denoland/deno"
+command = ["deno", "run", "source", "<input"]

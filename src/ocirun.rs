@@ -10,6 +10,7 @@ use anyhow::Result;
 use lazy_static::lazy_static;
 use regex::Captures;
 use regex::Regex;
+use regex::RegexBuilder;
 use serde::{Deserialize, Serialize};
 
 use mdbook::book::Book;
@@ -18,16 +19,29 @@ use mdbook::preprocess::{Preprocessor, PreprocessorContext};
 
 use crate::utils::map_chapter;
 
-#[derive(Debug, Deserialize, Serialize)]
+#[derive(Debug, Deserialize, Serialize, Clone, PartialEq)]
 pub struct LangConfig {
-    name: String,
-    image: String,
+    pub name: String,
+    pub image: String,
+    pub command: Vec<String>,
 }
 
-#[derive(Debug, Deserialize, Serialize, Default)]
+impl LangConfig {
+    pub fn rust() -> Self {
+        Self {
+            name: "rust".into(),
+            image: "rust".into(),
+            command: vec![
+                "/bin/bash".into(),
+                "-ec".into(),
+                "rustc source -o binary && ./binary < input".into(),
+            ],
+        }
+    }
+}
+
+#[derive(Debug, Deserialize, Serialize, Default, PartialEq)]
 pub struct OciRunConfig {
-    #[serde(default)]
-    pub command: Option<String>,
     #[serde(default)]
     pub engine: Option<String>,
     #[serde(default)]
@@ -42,6 +56,7 @@ impl OciRunConfig {
                 None => "docker".to_string(),
             },
             root_path,
+            langs: self.langs.clone(),
         }
     }
 }
@@ -49,6 +64,7 @@ impl OciRunConfig {
 pub struct OciRun {
     pub engine: String,
     pub root_path: PathBuf,
+    pub langs: Vec<LangConfig>,
 }
 
 impl Default for OciRun {
@@ -58,9 +74,9 @@ impl Default for OciRun {
 }
 
 lazy_static! {
-    static ref CMDRUN_REG_NEWLINE: Regex = Regex::new(r"<!--[ ]*ocirun (.*?)-->\r?\n")
+    static ref OCIRUN_REG_NEWLINE: Regex = Regex::new(r"<!--[ ]*ocirun (.*?)-->\r?\n")
         .expect("Failed to init regex for finding newline pattern");
-    static ref CMDRUN_REG_INLINE: Regex = Regex::new(r"<!--[ ]*ocirun (.*?)-->")
+    static ref OCIRUN_REG_INLINE: Regex = Regex::new(r"<!--[ ]*ocirun (.*?)-->")
         .expect("Failed to init regex for finding inline pattern");
 }
 
@@ -137,7 +153,7 @@ impl OciRun {
     pub fn run_on_content(&self, content: &str, working_dir: &str) -> Result<String> {
         let mut err = None;
 
-        let mut result = CMDRUN_REG_NEWLINE
+        let mut result = OCIRUN_REG_NEWLINE
             .replace_all(content, |caps: &Captures| {
                 self.run_ocirun(caps[1].to_string(), working_dir, false)
                     .unwrap_or_else(|e| {
@@ -151,7 +167,7 @@ impl OciRun {
             return Err(e);
         }
 
-        result = CMDRUN_REG_INLINE
+        result = OCIRUN_REG_INLINE
             .replace_all(result.as_str(), |caps: &Captures| {
                 self.run_ocirun(caps[1].to_string(), working_dir, true)
                     .unwrap_or_else(|e| {
@@ -160,6 +176,8 @@ impl OciRun {
                     })
             })
             .to_string();
+
+        result = self.run_snippets_of_content(result.as_str()).unwrap();
 
         match err {
             None => Ok(result),
@@ -244,5 +262,31 @@ impl OciRun {
         // eprintln!("stderr: {:?}", stderr);
 
         Ok(stdout)
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use crate::{ocirun::LangConfig, OciRunConfig};
+
+    #[test]
+    pub fn test_deserialize_config() {
+        let expected = OciRunConfig {
+            engine: Some("podman".into()),
+            langs: vec![LangConfig::rust(),LangConfig::rust()],
+        };
+        let toml_config = r#"
+        engine = "podman"
+        [[langs]]
+        name = "rust"
+        image = "rust"
+        command = ["/bin/bash", "-ec", "rustc source -o binary && ./binary < input"]
+        [[langs]]
+        name = "rust"
+        image = "rust"
+        command = ["/bin/bash", "-ec", "rustc source -o binary && ./binary < input"]
+        "#;
+        let config: OciRunConfig = toml::from_str(toml_config).unwrap();
+        assert_eq!(config, expected);
     }
 }
