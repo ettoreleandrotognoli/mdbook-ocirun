@@ -1,7 +1,5 @@
-use clap::CommandFactory;
 use lazy_static::lazy_static;
 use std::{
-    cmp::Ordering,
     env::temp_dir,
     fs::File,
     io::Write,
@@ -21,7 +19,7 @@ lazy_static! {
         .expect("Failed to init regex for finding snippets pattern");
 }
 
-use crate::{ocirun::LangConfig, OciRun};
+use crate::{ocirun::LangConfig, utils::format_whitespace, OciRun};
 
 const SUCCESS_PATH: &str = "success.txt";
 const ERROR_PATH: &str = "error.txt";
@@ -163,7 +161,32 @@ pub trait SnippetRunner {
     fn run(&self, snippet: &CodeSnippet) -> Result<String, String>;
 }
 
-struct CachedRunner<R: SnippetRunner> {
+pub struct OciSnippetRunner {
+    pub engine: String,
+}
+
+impl Default for OciSnippetRunner {
+    fn default() -> Self {
+        Self {
+            engine: "docker".into(),
+        }
+    }
+}
+
+impl OciSnippetRunner {
+    pub fn new(engine: String) -> Self {
+        Self { engine }
+    }
+
+    pub fn cached(self) -> CachedRunner<Self> {
+        CachedRunner {
+            cache: CodeSnippetCache::default(),
+            runner: self,
+        }
+    }
+}
+
+pub struct CachedRunner<R: SnippetRunner> {
     cache: CodeSnippetCache,
     runner: R,
 }
@@ -181,17 +204,14 @@ impl<R: SnippetRunner> SnippetRunner for CachedRunner<R> {
 
 impl OciRun {
     pub fn lang_config(&self, lang: &String) -> Option<&LangConfig> {
-        for config in self.langs.iter() {
-            if config.name.cmp(lang).is_eq() {
-                return Some(config);
-            }
-        }
-        None
+        self.langs
+            .iter()
+            .find(|&config| config.name.cmp(lang).is_eq())
     }
 
     pub fn run_snippets_of_content(&self, content: &str) -> Result<String> {
         let ocirun_flag = "ocirun".to_string();
-        let helper = SnippetHelper::create(content);
+        let helper = Snippets::create(content);
         let mut result = String::new();
         let mut begin: usize = 0;
         let mut end: usize = 0;
@@ -211,10 +231,10 @@ impl OciRun {
                 let code_snippet = CodeSnippet {
                     expected: None,
                     input: None,
-                    config: config,
+                    config,
                     source: Source::String(snippet.get_source(content).to_string()),
                 };
-                let snippet_result = self.run(&code_snippet);
+                let snippet_result = self.snippet_runner.run(&code_snippet);
                 let markdown = match snippet_result {
                     Ok(content) => format!("\n```console,success\n{}```", content),
                     Err(content) => format!("\n```console,error\n{}```", content),
@@ -227,7 +247,7 @@ impl OciRun {
     }
 }
 
-impl SnippetRunner for OciRun {
+impl SnippetRunner for OciSnippetRunner {
     fn run(&self, snippet: &CodeSnippet) -> Result<String, String> {
         let mut args = vec!["create", "--rm", "-w", "/root", "-t", &snippet.config.image];
         for arg in &snippet.config.command {
@@ -278,8 +298,8 @@ impl SnippetRunner for OciRun {
             .with_context(|| "Fail to run container")
             .unwrap();
 
-        let stdout = Self::format_whitespace(String::from_utf8_lossy(&output.stdout), false)
-            .replace("\r\n", "\n");
+        let stdout =
+            format_whitespace(String::from_utf8_lossy(&output.stdout), false).replace("\r\n", "\n");
 
         match output.status.success() {
             true => Ok(stdout),
@@ -302,13 +322,12 @@ impl SnippetRef {
 }
 
 #[derive(Debug)]
-struct SnippetHelper<'a> {
-    pub source: &'a str,
+struct Snippets {
     pub snippets: Vec<SnippetRef>,
 }
 
-impl SnippetHelper<'_> {
-    pub fn create<'a>(markdown: &'a str) -> SnippetHelper<'a> {
+impl Snippets {
+    pub fn create(markdown: &str) -> Snippets {
         let mut refs: Vec<SnippetRef> = vec![];
         let mut captures = OCIRUN_SNIPPET.captures_iter(markdown);
         while let Some(begin_snippet) = captures.next() {
@@ -326,10 +345,7 @@ impl SnippetHelper<'_> {
                 }
             }
         }
-        SnippetHelper {
-            source: markdown,
-            snippets: refs,
-        }
+        Snippets { snippets: refs }
     }
 }
 
@@ -337,10 +353,12 @@ impl SnippetHelper<'_> {
 mod tests {
     use std::path::Path;
 
-    use crate::ocirun::{LangConfig, OciRunConfig};
+    use crate::{
+        ocirun::{LangConfig, OciRunConfig},
+        snippet::OciSnippetRunner,
+    };
 
-    use super::{CodeSnippet, CodeSnippetCache, Config, SnippetHelper, SnippetRunner, Source};
-
+    use super::{CodeSnippet, CodeSnippetCache, Config, SnippetRunner, Snippets, Source};
 
     #[test]
     pub fn test_cache() {
@@ -365,10 +383,7 @@ mod tests {
 
     #[test]
     pub fn test_run_snippet() {
-        let config = OciRunConfig {
-            ..Default::default()
-        };
-        let runner = config.create_preprocessor(Path::new(".").to_path_buf());
+        let runner = OciSnippetRunner::default();
         let snippet = CodeSnippet {
             source: Source::String(
                 r#"
@@ -425,7 +440,7 @@ mod tests {
     
         "#;
 
-        let snippets = SnippetHelper::create(markdown);
+        let snippets = Snippets::create(markdown);
         assert_eq!(snippets.snippets.len(), 3);
     }
 

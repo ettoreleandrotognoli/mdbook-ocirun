@@ -1,4 +1,3 @@
-use std::borrow::Cow;
 use std::fs;
 use std::path::Path;
 use std::path::PathBuf;
@@ -10,13 +9,15 @@ use anyhow::Result;
 use lazy_static::lazy_static;
 use regex::Captures;
 use regex::Regex;
-use regex::RegexBuilder;
 use serde::{Deserialize, Serialize};
 
 use mdbook::book::Book;
 use mdbook::book::Chapter;
 use mdbook::preprocess::{Preprocessor, PreprocessorContext};
 
+use crate::snippet::OciSnippetRunner;
+use crate::snippet::SnippetRunner;
+use crate::utils::format_whitespace;
 use crate::utils::map_chapter;
 
 #[derive(Debug, Deserialize, Serialize, Clone, PartialEq)]
@@ -50,13 +51,15 @@ pub struct OciRunConfig {
 
 impl OciRunConfig {
     pub fn create_preprocessor(&self, root_path: PathBuf) -> OciRun {
+        let engine = match &self.engine {
+            Some(engine) => engine.clone(),
+            None => "docker".to_string(),
+        };
         OciRun {
-            engine: match &self.engine {
-                Some(engine) => engine.clone(),
-                None => "docker".to_string(),
-            },
+            engine: engine.clone(),
             root_path,
             langs: self.langs.clone(),
+            snippet_runner: Box::new(OciSnippetRunner::new(engine).cached()),
         }
     }
 }
@@ -65,6 +68,7 @@ pub struct OciRun {
     pub engine: String,
     pub root_path: PathBuf,
     pub langs: Vec<LangConfig>,
+    pub snippet_runner: Box<dyn SnippetRunner>,
 }
 
 impl Default for OciRun {
@@ -185,37 +189,6 @@ impl OciRun {
         }
     }
 
-    // Some progams output linebreaks in UNIX format,
-    // this can cause problems on Windows if for any reason
-    // the user is expecting consistent linebreaks,
-    // e.g. they run the resulting markdown through a validation tool.
-    //
-    // So this function simply replaces all linebreaks with Windows linebreaks.
-    #[cfg(target_family = "windows")]
-    fn format_whitespace(str: Cow<'_, str>, inline: bool) -> String {
-        let str = match inline {
-            // When running inline it is undeseriable to have trailing whitespace
-            true => str.trim_end(),
-            false => str.as_ref(),
-        };
-
-        let mut res = str.lines().collect::<Vec<_>>().join("\r\n");
-        if !inline && !res.is_empty() {
-            res.push_str("\r\n");
-        }
-
-        return res;
-    }
-
-    #[cfg(any(target_family = "unix", target_family = "other"))]
-    pub fn format_whitespace(str: Cow<'_, str>, inline: bool) -> String {
-        match inline {
-            // Wh;n running inline it is undeseriable to have trailing whitespace
-            true => str.trim_end().to_string(),
-            false => str.to_string(),
-        }
-    }
-
     // This method is public for unit tests
     pub fn run_ocirun(
         &self,
@@ -252,7 +225,7 @@ impl OciRun {
 
         eprintln!(">>>>>>>>> {:?}", &output);
 
-        let stdout = Self::format_whitespace(String::from_utf8_lossy(&output.stdout), inline)
+        let stdout = format_whitespace(String::from_utf8_lossy(&output.stdout), inline)
             .replace("\r\n", "\n");
 
         // let stderr = String::from_utf8_lossy(&output.stderr).to_string();
@@ -273,7 +246,7 @@ mod tests {
     pub fn test_deserialize_config() {
         let expected = OciRunConfig {
             engine: Some("podman".into()),
-            langs: vec![LangConfig::rust(),LangConfig::rust()],
+            langs: vec![LangConfig::rust(), LangConfig::rust()],
         };
         let toml_config = r#"
         engine = "podman"
