@@ -6,7 +6,7 @@
 {{readme}}
 ## Contributors
 
-I would like to thank [@exsjabe](https://github.com/exsjabe) for his valuable help with integrating Windows support and inline ocirun calls.
+I would like to thank [@FauconFan](https://github.com/FauconFan) for his work on [mdbook-cmdrun](https://github.com/FauconFan/mdbook-cmdrun) that was my start for this project.
 
 Current version: {{version}}  
 License: {{license}}

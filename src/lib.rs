@@ -1,4 +1,5 @@
-//! This is a preprocessor for the [rust-lang mdbook](https://github.com/rust-lang/mdBook) project. This allows to run arbitrary (shell) commands and include the output of these commands within the markdown file.
+//! This is a preprocessor for the [rust-lang mdbook](https://github.com/rust-lang/mdBook) project.
+//! This allows to run arbitrary commands and code snippets inside containers and include the output of them within the markdown file.
 //!
 //! # Getting started
 //!
@@ -12,7 +13,7 @@
 //! [preprocessor.ocirun]
 //! ```
 //!
-//! # How to
+//! # Running arbitrary commands
 //!
 //! Let's say we have these two files:
 //!
@@ -65,15 +66,13 @@
 //!
 //! ```
 //!
-//! # Details
+//! ## Details
 //!
-//! When the pattern `<!-- ocirun <image> $1 -->\n` or `<!-- ocirun $1 -->` is encountered, the command `$1` will be run using the shell `sh` like this: `sh -c $1`.
+//! When the pattern `<!-- ocirun <image> $1 -->\n` or `<!-- ocirun <image> $1 -->` is encountered, the command `$1` will be run using the container like this: `docker run <image> $1`.
 //! Also the working directory is the directory where the pattern was found (not root).
 //! The command invoked must take no inputs (stdin is not used), but a list of command lines arguments and must produce output in stdout, stderr is ignored.
 //!
-//! As of July 2023, mdbook-ocirun runs on Windows platforms using the `cmd` shell!
-//!
-//! # Examples
+//! ## Examples
 //!
 //! The following is valid:
 //!
@@ -120,6 +119,44 @@
 //! - Python3
 //! - Node
 //! - Rust
+//!
+//!
+//! # Running Code Snippets
+//!
+//!
+//! First you have to config how to run your snippets, here one example for python:
+//!
+//! ```toml
+//! [[preprocessor.ocirun.langs]]
+//! name = "python"
+//! image = "python"
+//! command = ["python", "source"]
+//! ```
+//!
+//! So when we found a snippet like:
+//!
+//! ````markdown
+//! ```python,ocirun
+//! print('Hello World')
+//! ```
+//! ````
+//!
+//! We will append the output:
+//!
+//! ````markdown
+//! ```console,success
+//! Hello World
+//! ```
+//! ````
+//!
+//! The final result should be something like this:
+//!
+//! ```python,ocirun
+//! print('Hello World')
+//! ```
+//! ```console,success
+//! Hello World
+//! ```
 //!
 pub mod ocirun;
 pub mod snippet;
