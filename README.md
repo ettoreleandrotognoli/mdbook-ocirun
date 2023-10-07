@@ -167,5 +167,5 @@ Hello World
 
 I would like to thank [@FauconFan](https://github.com/FauconFan) for his work on [mdbook-cmdrun](https://github.com/FauconFan/mdbook-cmdrun) that was my start for this project.
 
-Current version: 0.1.0  
+Current version: 0.2.0  
 License: MIT
