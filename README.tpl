@@ -1,5 +1,6 @@
 [![Workflow Status](https://github.com/ettoreleandrotognoli/mdbook-ocirun/actions/workflows/main.yml/badge.svg)](https://github.com/ettoreleandrotognoli/mdbook-ocirun/actions?query=workflow%3A%22main%22)
-![Crates.io](https://img.shields.io/crates/l/mdbook-ocirun)
+[![Crates.io](https://img.shields.io/crates/l/mdbook-ocirun)](./LICENSE)
+[![crates.io](https://img.shields.io/crates/v/mdbook-ocirun.svg)](https://crates.io/crates/mdbook-ocirun)
 
 # {{crate}}
 
