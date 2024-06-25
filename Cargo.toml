@@ -1,6 +1,6 @@
 [package]
 name = "mdbook-ocirun"
-version = "0.2.0"
+version = "0.2.1"
 edition = "2021"
 authors = ["Ettore Leandro Tognoli <ettoreleandrotognoli@gmail.com>"]
 description = "mdbook preprocessor to run arbitrary commands and code snippets inside containers"
